@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -19,7 +20,7 @@ class Sidebar(QWidget):
 
         self.setStyleSheet("""
             QWidget{
-                background-color:#0F172A;
+                background:#0F172A;
                 color:white;
                 font-family:Segoe UI;
             }
@@ -35,21 +36,19 @@ class Sidebar(QWidget):
                 border:none;
                 color:white;
                 text-align:left;
-                padding:12px;
+                padding:12px 16px;
                 font-size:15px;
-                border-radius:8px;
+                border-radius:10px;
             }
 
             QPushButton:hover{
                 background:#1E293B;
             }
-
-            QPushButton:pressed{
-                background:#2563EB;
-            }
         """)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(10, 15, 10, 15)
+        layout.setSpacing(8)
 
         title = QLabel("🤖 NEXUS AI")
         title.setAlignment(Qt.AlignCenter)
@@ -61,13 +60,16 @@ class Sidebar(QWidget):
         layout.addWidget(title)
         layout.addWidget(line)
 
-        self.chat_btn = QPushButton("💬 AI Chat")
-        self.project_btn = QPushButton("📁 Projects")
-        self.explorer_btn = QPushButton("📂 Explorer")
-        self.editor_btn = QPushButton("📝 Code Editor")
-        self.agent_btn = QPushButton("🤖 AI Agent")
-        self.memory_btn = QPushButton("🧠 Memory")
-        self.settings_btn = QPushButton("⚙ Settings")
+        self.buttons = {}
+
+        self.chat_btn = self.create_button("💬 AI Chat", "chat")
+        self.project_btn = self.create_button("📁 Projects", "projects")
+        self.explorer_btn = self.create_button("📂 Explorer", "explorer")
+        self.editor_btn = self.create_button("📝 Code Editor", "editor")
+        self.agent_btn = self.create_button("🤖 AI Agent", "agent")
+        self.memory_btn = self.create_button("🧠 Memory", "memory")
+        self.settings_btn = self.create_button("⚙ Settings", "settings")
+        self.logout_btn = self.create_button("🚪 Logout", "logout")
 
         layout.addWidget(self.chat_btn)
         layout.addWidget(self.project_btn)
@@ -79,40 +81,58 @@ class Sidebar(QWidget):
         layout.addStretch()
 
         layout.addWidget(self.settings_btn)
-
-        self.logout_btn = QPushButton("🚪 Logout")
         layout.addWidget(self.logout_btn)
 
         self.setLayout(layout)
 
-        self.chat_btn.clicked.connect(
-            lambda: self.menu_clicked.emit("chat")
-        )
+        # Default Active Button
+        self.set_active("chat")
 
-        self.project_btn.clicked.connect(
-            lambda: self.menu_clicked.emit("projects")
-        )
+    def create_button(self, text, key):
 
-        self.explorer_btn.clicked.connect(
-            lambda: self.menu_clicked.emit("explorer")
-        )
+        btn = QPushButton(text)
+        btn.setCursor(QCursor(Qt.PointingHandCursor))
 
-        self.editor_btn.clicked.connect(
-            lambda: self.menu_clicked.emit("editor")
-        )
+        btn.clicked.connect(lambda: self.button_clicked(key))
 
-        self.agent_btn.clicked.connect(
-            lambda: self.menu_clicked.emit("agent")
-        )
+        self.buttons[key] = btn
 
-        self.memory_btn.clicked.connect(
-            lambda: self.menu_clicked.emit("memory")
-        )
+        return btn
 
-        self.settings_btn.clicked.connect(
-            lambda: self.menu_clicked.emit("settings")
-        )
+    def button_clicked(self, key):
 
-        self.logout_btn.clicked.connect(
-            lambda: self.menu_clicked.emit("logout")
-        )
+        self.set_active(key)
+        self.menu_clicked.emit(key)
+
+    def set_active(self, active_key):
+
+        for key, btn in self.buttons.items():
+
+            if key == active_key:
+                btn.setStyleSheet("""
+                    QPushButton{
+                        background:#2563EB;
+                        color:white;
+                        border-radius:10px;
+                        padding:12px 16px;
+                        font-size:15px;
+                        font-weight:bold;
+                        text-align:left;
+                    }
+                """)
+            else:
+                btn.setStyleSheet("""
+                    QPushButton{
+                        background:transparent;
+                        color:white;
+                        border:none;
+                        border-radius:10px;
+                        padding:12px 16px;
+                        font-size:15px;
+                        text-align:left;
+                    }
+
+                    QPushButton:hover{
+                        background:#1E293B;
+                    }
+                """)

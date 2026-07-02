@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QGridLayout,
     QFrame,
+    QPushButton,
 )
 
 
@@ -32,18 +33,39 @@ class HomePage(QWidget):
 
             QFrame{
                 background:#1E293B;
-                border:2px solid #2563EB;
-                border-radius:12px;
+                border:1px solid #334155;
+                border-radius:16px;
+            }
+
+            QFrame:hover{
+                border:2px solid #3B82F6;
+                background:#243244;
             }
 
             QLabel.cardTitle{
                 font-size:18px;
                 font-weight:bold;
+                border:none;
             }
 
             QLabel.cardText{
                 font-size:13px;
                 color:#CBD5E1;
+                border:none;
+            }
+
+            QPushButton{
+                background:#2563EB;
+                color:white;
+                border:none;
+                border-radius:8px;
+                padding:8px;
+                font-size:13px;
+                font-weight:bold;
+            }
+
+            QPushButton:hover{
+                background:#1D4ED8;
             }
         """)
 
@@ -62,26 +84,44 @@ class HomePage(QWidget):
         main_layout.addSpacing(25)
 
         grid = QGridLayout()
+        grid.setHorizontalSpacing(20)
+        grid.setVerticalSpacing(20)
 
-        grid.addWidget(self.create_card(
-            "💬 AI Chat",
-            "Start chatting with your AI assistant."
-        ), 0, 0)
+        grid.addWidget(
+            self.create_card(
+                "💬 AI Chat",
+                "Start chatting with your AI assistant."
+            ),
+            0,
+            0
+        )
 
-        grid.addWidget(self.create_card(
-            "📁 Projects",
-            "Manage your AI and coding projects."
-        ), 0, 1)
+        grid.addWidget(
+            self.create_card(
+                "📁 Projects",
+                "Manage your AI and coding projects."
+            ),
+            0,
+            1
+        )
 
-        grid.addWidget(self.create_card(
-            "🤖 AI Agent",
-            "Launch smart automation tasks."
-        ), 1, 0)
+        grid.addWidget(
+            self.create_card(
+                "🤖 AI Agent",
+                "Launch smart automation tasks."
+            ),
+            1,
+            0
+        )
 
-        grid.addWidget(self.create_card(
-            "🧠 Memory",
-            "View saved memories and history."
-        ), 1, 1)
+        grid.addWidget(
+            self.create_card(
+                "🧠 Memory",
+                "View saved memories and history."
+            ),
+            1,
+            1
+        )
 
         main_layout.addLayout(grid)
         main_layout.addStretch()
@@ -89,9 +129,13 @@ class HomePage(QWidget):
         self.setLayout(main_layout)
 
     def create_card(self, title_text, body_text):
+
         card = QFrame()
+        card.setMinimumHeight(180)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
 
         title = QLabel(title_text)
         title.setProperty("class", "cardTitle")
@@ -100,8 +144,14 @@ class HomePage(QWidget):
         body.setWordWrap(True)
         body.setProperty("class", "cardText")
 
+        button = QPushButton("Open →")
+
         layout.addWidget(title)
         layout.addWidget(body)
+
+        layout.addStretch()
+
+        layout.addWidget(button)
 
         card.setLayout(layout)
 
