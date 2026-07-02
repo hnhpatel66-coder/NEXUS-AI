@@ -3,13 +3,13 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 
-from ui.splash.splash_screen import SplashScreen
+from ui.login.register_window import RegisterWindow
 
 create_database()
 
 app = QApplication(sys.argv)
 
-window = SplashScreen()
+window = RegisterWindow()
 
 window.show()
 
