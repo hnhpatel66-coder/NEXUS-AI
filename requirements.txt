@@ -1,0 +1,6 @@
+PySide6
+FastAPI
+uvicorn
+SQLAlchemy
+bcrypt
+requests
