@@ -25,8 +25,8 @@ class AuthService:
 
         cursor.execute(
             """
-            INSERT INTO users(full_name,email,password)
-            VALUES(?,?,?)
+            INSERT INTO users(full_name, email, password)
+            VALUES (?, ?, ?)
             """,
             (
                 full_name,
@@ -48,7 +48,7 @@ class AuthService:
 
         cursor.execute(
             """
-            SELECT password
+            SELECT email, password
             FROM users
             WHERE email=?
             """,
@@ -57,12 +57,23 @@ class AuthService:
 
         user = cursor.fetchone()
 
+        print("Entered Email :", email)
+        print("Database User :", user)
+
         conn.close()
 
         if user is None:
+            print("❌ Email Not Found")
             return False
 
-        return PasswordManager.verify_password(
+        print("Entered Password :", password)
+        print("Stored Hash :", user[1])
+
+        result = PasswordManager.verify_password(
             password,
-            user[0]
+            user[1]
         )
+
+        print("Password Match :", result)
+
+        return result
