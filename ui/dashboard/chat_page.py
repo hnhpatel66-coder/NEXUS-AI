@@ -1,493 +1,537 @@
-from services.ai_service import AIService
-
-from ui.widgets.message_widget import MessageWidget
-from ui.widgets.code_block import CodeBlock
-
-from ui.chat.chat_parser import ChatParser
-from ui.chat.markdown_renderer import MarkdownRenderer
-from ui.chat.stream_writer import StreamWriter
-from ui.chat.thinking_widget import ThinkingWidget
-
 from PySide6.QtWidgets import (
     QWidget,
-    QLabel,
-    QPushButton,
-    QLineEdit,
     QVBoxLayout,
     QHBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QLabel,
     QScrollArea,
     QFrame,
 )
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import (
+    Qt,
+    QThread,
+    Signal,
+)
 
+from PySide6.QtGui import QCursor
+
+from ui.widgets.message_widget import MessageWidget
+from ui.widgets.code_block import CodeBlock
+from ui.chat.thinking_widget import ThinkingWidget
+from ui.chat.stream_writer import StreamWriter
+from ui.chat.chat_parser import ChatParser
+from ui.chat.markdown_renderer import MarkdownRenderer
+
+from services.ai_service import AIService
+
+
+# ==========================================================
+# AI Worker Thread
+# ==========================================================
+
+class AIWorker(QThread):
+
+    finished = Signal(str)
+    failed = Signal(str)
+
+    def __init__(self, prompt):
+        super().__init__()
+
+        self.prompt = prompt
+
+    def run(self):
+
+        try:
+
+            response = AIService.generate_response(
+                self.prompt
+            )
+
+            self.finished.emit(response)
+
+        except Exception as e:
+
+            self.failed.emit(str(e))
+
+
+# ==========================================================
+# CHAT PAGE
+# ==========================================================
 
 class ChatPage(QWidget):
 
     def __init__(self):
         super().__init__()
 
-        self.setObjectName("ChatPage")
+        self.worker = None
 
-        # ======================================
-        # STYLE
-        # ======================================
+        self.current_ai_widget = None
+
+        self.stream_writer = None
+
+        self.setup_ui()
+
+        # ==========================================================
+    # UI
+    # ==========================================================
+
+    def setup_ui(self):
 
         self.setStyleSheet("""
-
-        QWidget#ChatPage{
-
+        QWidget{
             background:#0F172A;
-        }
-
-        QLabel{
-
             color:white;
-            font-family:Segoe UI;
-        }
-
-        QScrollArea{
-
-            border:none;
-            background:#0F172A;
-        }
-
-        QScrollArea QWidget{
-
-            background:#0F172A;
+            font-family:'Segoe UI';
         }
 
         QLineEdit{
-
             background:#111827;
             border:1px solid #334155;
-            border-radius:14px;
-
-            padding:12px;
-
+            border-radius:18px;
+            padding:14px;
             color:white;
-
             font-size:14px;
+        }
+
+        QLineEdit:focus{
+            border:2px solid #2563EB;
         }
 
         QPushButton{
-
             background:#2563EB;
-
             color:white;
-
             border:none;
-
-            border-radius:12px;
-
-            padding:12px 18px;
-
-            font-size:14px;
-
+            border-radius:18px;
+            font-size:15px;
             font-weight:bold;
+            padding:12px;
         }
 
         QPushButton:hover{
-
             background:#1D4ED8;
         }
 
+        QScrollArea{
+            border:none;
+            background:transparent;
+        }
         """)
 
-        # ======================================
-        # MAIN LAYOUT
-        # ======================================
+        main_layout = QVBoxLayout(self)
 
-        self.main_layout = QVBoxLayout(self)
-
-        self.main_layout.setContentsMargins(
-            20,
-            20,
-            20,
-            20
+        main_layout.setContentsMargins(
+            18,
+            18,
+            18,
+            18
         )
 
-        self.main_layout.setSpacing(15)
+        main_layout.setSpacing(12)
 
-        # ======================================
-        # HEADER
-        # ======================================
+        # =====================================
+        # TITLE
+        # =====================================
 
-        header = QHBoxLayout()
+        title = QLabel("💬 NEXUS AI")
 
-        self.title = QLabel("💬 NEXUS AI")
-
-        self.title.setStyleSheet("""
-
-            font-size:28px;
-
+        title.setStyleSheet("""
+            font-size:24px;
             font-weight:bold;
-
             color:#60A5FA;
-
         """)
 
-        self.status = QLabel("🟢 Online")
+        main_layout.addWidget(title)
 
-        self.status.setStyleSheet("""
-
-            color:#22C55E;
-
-            font-size:14px;
-
-            font-weight:bold;
-
-        """)
-
-        header.addWidget(self.title)
-
-        header.addStretch()
-
-        header.addWidget(self.status)
-
-        self.main_layout.addLayout(header)
-
-        # ======================================
-        # CHAT AREA
-        # ======================================
+        # =====================================
+        # SCROLL AREA
+        # =====================================
 
         self.scroll = QScrollArea()
 
         self.scroll.setWidgetResizable(True)
 
+        self.scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarAlwaysOff
+        )
+
         self.chat_container = QWidget()
 
-        self.chat_layout = QVBoxLayout()
+        self.chat_layout = QVBoxLayout(
+            self.chat_container
+        )
 
-        self.chat_layout.setSpacing(12)
+        self.chat_layout.setSpacing(14)
+
+        self.chat_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
 
         self.chat_layout.addStretch()
-
-        self.chat_container.setLayout(
-            self.chat_layout
-        )
 
         self.scroll.setWidget(
             self.chat_container
         )
 
-        self.main_layout.addWidget(
-            self.scroll
-        )
-                # ======================================
-        # INPUT AREA (ChatGPT Style)
-        # ======================================
+        main_layout.addWidget(self.scroll)
+
+        # =====================================
+        # INPUT BAR
+        # =====================================
 
         bottom = QHBoxLayout()
-        bottom.setSpacing(10)
 
-        input_frame = QFrame()
+        self.input = QLineEdit()
 
-        input_frame.setStyleSheet("""
-        QFrame{
-
-            background:#111827;
-
-            border:1px solid #334155;
-
-            border-radius:18px;
-
-        }
-        """)
-
-        input_layout = QHBoxLayout(input_frame)
-
-        input_layout.setContentsMargins(
-            12,
-            6,
-            8,
-            6
-        )
-
-        # ======================================
-        # MESSAGE INPUT
-        # ======================================
-
-        self.message_input = QLineEdit()
-
-        self.message_input.setPlaceholderText(
+        self.input.setPlaceholderText(
             "Message NEXUS AI..."
         )
 
-        self.message_input.setStyleSheet("""
-        QLineEdit{
-
-            border:none;
-
-            background:transparent;
-
-            color:white;
-
-            font-size:14px;
-
-            padding:8px;
-
-        }
-        """)
-
-        # ======================================
-        # SEND BUTTON
-        # ======================================
-
-        self.send_button = QPushButton("➤")
-
-        self.send_button.setFixedSize(46,46)
-
-        self.send_button.setCursor(
-            Qt.PointingHandCursor
+        self.input.returnPressed.connect(
+            self.send_message
         )
 
-        self.send_button.setStyleSheet("""
+        bottom.addWidget(self.input)
 
-        QPushButton{
+        self.send_btn = QPushButton("➤")
 
-            background:#2563EB;
+        self.send_btn.setFixedSize(55,55)
 
-            border:none;
+        self.send_btn.setCursor(
+            QCursor(Qt.PointingHandCursor)
+        )
 
-            border-radius:23px;
+        self.send_btn.clicked.connect(
+            self.send_message
+        )
 
-            font-size:18px;
+        bottom.addWidget(
+            self.send_btn
+        )
 
-            font-weight:bold;
+        main_layout.addLayout(bottom)
 
-        }
+        # =====================================
+        # THINKING
+        # =====================================
 
-        QPushButton:hover{
+        self.thinking = ThinkingWidget()
 
-            background:#1D4ED8;
+        self.thinking.hide()
 
-        }
+        self.chat_layout.insertWidget(
+            self.chat_layout.count()-1,
+            self.thinking
+        )
 
-        """)
-
-        input_layout.addWidget(self.message_input)
-        input_layout.addWidget(self.send_button)
-
-        bottom.addWidget(input_frame)
-
-        self.main_layout.addLayout(bottom)
-
-        # ======================================
-        # SYSTEM VARIABLES
-        # ======================================
-
-        self.current_ai_widget = None
+        # =====================================
+        # STREAM WRITER
+        # =====================================
 
         self.stream_writer = StreamWriter(
-            self.update_stream
+            self.stream_update
         )
 
-        self.thinking_widget = ThinkingWidget()
+        self.stream_writer.finished.connect(
+            self.stream_finished
+        )
 
-        # ======================================
+        # =====================================
         # WELCOME MESSAGE
-        # ======================================
+        # =====================================
 
-        self.add_message(
+        welcome = MessageWidget(
             "ai",
-            "Hello 👋\n\nI am NEXUS AI.\nHow can I help you today?"
-        )
-
-        # ======================================
-        # EVENTS
-        # ======================================
-
-        self.send_button.clicked.connect(
-            self.send_message
-        )
-
-        self.message_input.returnPressed.connect(
-            self.send_message
-        )
-            # ==========================================================
-    # ADD WIDGET
-    # ==========================================================
-
-    def add_widget(self, widget):
-
-        # Stretch પહેલાં widget add કરો
-        self.chat_layout.insertWidget(
-            self.chat_layout.count() - 1,
-            widget
-        )
-
-        # Auto Scroll
-        scrollbar = self.scroll.verticalScrollBar()
-        scrollbar.setValue(
-            scrollbar.maximum()
-        )
-
-    # ==========================================================
-    # ADD MESSAGE
-    # ==========================================================
-
-    def add_message(self, sender, message):
-
-        widget = MessageWidget(
-            sender,
-            message
-        )
-
-        self.add_widget(widget)
-
-    # ==========================================================
-    # ADD CODE BLOCK
-    # ==========================================================
-
-    def add_code(self, language, code):
-
-        widget = CodeBlock(
-            language,
-            code
-        )
-
-        self.add_widget(widget)
-
-    # ==========================================================
-    # UPDATE STREAM
-    # ==========================================================
-
-    def update_stream(self, text):
-
-        if self.current_ai_widget:
-
-            html = MarkdownRenderer.render(text)
-
-            self.current_ai_widget.set_message(
-                html
+            MarkdownRenderer.render(
+                "# 👋 Welcome\n\nI am **NEXUS AI**.\n\nHow can I help you today?"
             )
-
-        # Auto Scroll while streaming
-        scrollbar = self.scroll.verticalScrollBar()
-
-        scrollbar.setValue(
-            scrollbar.maximum()
         )
+
+        self.add_widget(welcome)
             # ==========================================================
     # SEND MESSAGE
     # ==========================================================
 
     def send_message(self):
 
-        message = self.message_input.text().strip()
+        prompt = self.input.text().strip()
 
-        if not message:
+        if not prompt:
             return
 
-        # ======================================
-        # USER MESSAGE
-        # ======================================
-
-        self.add_message(
+        # User Message
+        user_widget = MessageWidget(
             "user",
-            message
+            MarkdownRenderer.render(prompt)
         )
 
-        self.message_input.clear()
+        self.add_widget(user_widget)
 
-        # ======================================
-        # SHOW THINKING
-        # ======================================
+        self.input.clear()
+
+        self.input.setEnabled(False)
+
+        self.send_btn.setEnabled(False)
+
+        # Thinking Animation
+        self.thinking.start()
+
+        self.auto_scroll()
+
+        # AI Thread
+        self.worker = AIWorker(prompt)
+
+        self.worker.finished.connect(
+            self.receive_ai_response
+        )
+
+        self.worker.failed.connect(
+            self.receive_error
+        )
+
+        self.worker.start()
+
+    # ==========================================================
+    # RECEIVE RESPONSE
+    # ==========================================================
+
+    def receive_ai_response(self, response):
+
+        self.thinking.stop()
+
+        self.current_ai_widget = MessageWidget(
+            "ai",
+            ""
+        )
 
         self.add_widget(
-            self.thinking_widget
+            self.current_ai_widget
         )
 
-        self.thinking_widget.start()
+        self.stream_writer.start(response)
 
-        # Disable input while AI replying
-        self.message_input.setEnabled(False)
-        self.send_button.setEnabled(False)
+    # ==========================================================
+    # RECEIVE ERROR
+    # ==========================================================
 
-        # ======================================
-        # GET AI RESPONSE
-        # ======================================
+    def receive_error(self, error):
 
-        try:
+        self.thinking.stop()
 
-            reply = AIService.ask_ai(message)
+        widget = MessageWidget(
+            "ai",
+            f"<b>❌ Error</b><br><br>{error}"
+        )
 
-        except Exception as e:
+        self.add_widget(widget)
 
-            self.thinking_widget.stop()
+        self.input.setEnabled(True)
 
-            self.add_message(
-                "ai",
-                f"❌ Error\n\n{str(e)}"
-            )
+        self.send_btn.setEnabled(True)
 
-            self.message_input.setEnabled(True)
-            self.send_button.setEnabled(True)
+        self.input.setFocus()
+
+        # ==========================================================
+    # STREAM UPDATE
+    # ==========================================================
+
+    def stream_update(self, text):
+
+        if self.current_ai_widget is None:
+            return
+
+        html = MarkdownRenderer.render(text)
+
+        self.current_ai_widget.set_message(html)
+
+        self.auto_scroll()
+
+    # ==========================================================
+    # STREAM FINISHED
+    # ==========================================================
+
+    def stream_finished(self):
+
+        if self.current_ai_widget is None:
+
+            self.input.setEnabled(True)
+
+            self.send_btn.setEnabled(True)
+
+            self.input.setFocus()
 
             return
 
-        # ======================================
-        # REMOVE THINKING
-        # ======================================
+        response = self.stream_writer.text
 
-        self.chat_layout.removeWidget(
-            self.thinking_widget
+        blocks = ChatParser.parse(response)
+
+        if len(blocks) > 1:
+
+            self.chat_layout.removeWidget(
+                self.current_ai_widget
+            )
+
+            self.current_ai_widget.deleteLater()
+
+            self.current_ai_widget = None
+
+            for block in blocks:
+
+                if block["type"] == "text":
+
+                    widget = MessageWidget(
+                        "ai",
+                        MarkdownRenderer.render(
+                            block["content"]
+                        )
+                    )
+
+                    self.add_widget(widget)
+
+                elif block["type"] == "code":
+
+                    widget = CodeBlock(
+                        block["language"],
+                        block["content"]
+                    )
+
+                    self.add_widget(widget)
+
+        self.input.setEnabled(True)
+
+        self.send_btn.setEnabled(True)
+
+        self.input.setFocus()
+
+        self.auto_scroll()
+            # ==========================================================
+    # ADD WIDGET
+    # ==========================================================
+
+    def add_widget(self, widget):
+
+        self.chat_layout.insertWidget(
+            self.chat_layout.count() - 1,
+            widget
         )
 
-        self.thinking_widget.deleteLater()
+        self.auto_scroll()
 
-        self.thinking_widget = ThinkingWidget()
+    # ==========================================================
+    # AUTO SCROLL
+    # ==========================================================
 
-        # ======================================
-        # PARSE RESPONSE
-        # ======================================
-
-        blocks = ChatParser.parse(reply)
-
-        # ======================================
-        # SHOW BLOCKS
-        # ======================================
-
-        for block in blocks:
-
-            if block["type"] == "text":
-
-                self.current_ai_widget = MessageWidget(
-                    "ai",
-                    ""
-                )
-
-                self.add_widget(
-                    self.current_ai_widget
-                )
-
-                self.stream_writer.start(
-                    block["content"]
-                )
-
-            elif block["type"] == "code":
-
-                self.add_code(
-                    block["language"],
-                    block["content"]
-                )
-
-        # ======================================
-        # ENABLE INPUT AGAIN
-        # ======================================
-
-        self.message_input.setEnabled(True)
-        self.send_button.setEnabled(True)
-
-        self.message_input.setFocus()
-
-        # ======================================
-        # AUTO SCROLL
-        # ======================================
+    def auto_scroll(self):
 
         scrollbar = self.scroll.verticalScrollBar()
 
         scrollbar.setValue(
             scrollbar.maximum()
         )
+
+    # ==========================================================
+    # CLEAR CHAT
+    # ==========================================================
+
+    def clear_chat(self):
+
+        while self.chat_layout.count() > 1:
+
+            item = self.chat_layout.takeAt(0)
+
+            if item.widget():
+
+                item.widget().deleteLater()
+
+        self.current_ai_widget = None
+
+    # ==========================================================
+    # ADD USER MESSAGE
+    # ==========================================================
+
+    def add_user_message(self, text):
+
+        widget = MessageWidget(
+            "user",
+            MarkdownRenderer.render(text)
+        )
+
+        self.add_widget(widget)
+
+    # ==========================================================
+    # ADD AI MESSAGE
+    # ==========================================================
+
+    def add_ai_message(self, text):
+
+        widget = MessageWidget(
+            "ai",
+            MarkdownRenderer.render(text)
+        )
+
+        self.add_widget(widget)
+
+    # ==========================================================
+    # ADD SYSTEM MESSAGE
+    # ==========================================================
+
+    def add_system_message(self, text):
+
+        widget = MessageWidget(
+            "ai",
+            f"""
+            <div style="
+                background:#1E293B;
+                border-left:4px solid #3B82F6;
+                padding:12px;
+                border-radius:10px;
+            ">
+            {MarkdownRenderer.render(text)}
+            </div>
+            """
+        )
+
+        self.add_widget(widget)
+
+    # ==========================================================
+    # SET INPUT ENABLED
+    # ==========================================================
+
+    def set_input_enabled(self, enabled: bool):
+
+        self.input.setEnabled(enabled)
+
+        self.send_btn.setEnabled(enabled)
+
+    # ==========================================================
+    # FOCUS INPUT
+    # ==========================================================
+
+    def focus_input(self):
+
+        self.input.setFocus()
+
+    # ==========================================================
+    # CLOSE EVENT
+    # ==========================================================
+
+    def closeEvent(self, event):
+
+        try:
+
+            if self.worker and self.worker.isRunning():
+
+                self.worker.quit()
+
+                self.worker.wait()
+
+        except Exception:
+
+            pass
+
+        event.accept()

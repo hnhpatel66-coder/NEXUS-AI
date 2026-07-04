@@ -1,39 +1,130 @@
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QObject, QTimer, Signal
 
 
-class StreamWriter:
+class StreamWriter(QObject):
+    """
+    ChatGPT Style Streaming Writer
+    Streams text character-by-character.
+    """
 
-    def __init__(self, callback):
+    updated = Signal(str)
+    finished = Signal()
+
+    def __init__(self, callback=None, interval=15):
+        super().__init__()
+
         self.callback = callback
+        self.interval = interval
 
-        self.text = ""
-        self.index = 0
-        self.timer = QTimer()
+        self._text = ""
+        self._index = 0
+        self._streaming = False
 
-        self.timer.timeout.connect(self.write_next)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self._write_next)
 
-    # =========================
-    # START STREAM
-    # =========================
+    # ==========================================
+    # Start Streaming
+    # ==========================================
+
     def start(self, text: str):
 
-        self.text = text
-        self.index = 0
+        self.stop()
 
-        self.timer.start(15)  # speed (lower = faster)
+        self._text = text or ""
+        self._index = 0
+        self._streaming = True
 
-    # =========================
-    # WRITE CHARACTER BY CHARACTER
-    # =========================
-    def write_next(self):
+        self.timer.start(self.interval)
 
-        if self.index < len(self.text):
+    # ==========================================
+    # Internal Writer
+    # ==========================================
 
-            self.index += 1
+    def _write_next(self):
 
-            current_text = self.text[:self.index]
+        if self._index >= len(self._text):
 
-            self.callback(current_text)
+            self.stop()
 
-        else:
+            self.finished.emit()
+
+            return
+
+        self._index += 1
+
+        current = self._text[:self._index]
+
+        if self.callback:
+            self.callback(current)
+
+        self.updated.emit(current)
+
+    # ==========================================
+    # Stop Streaming
+    # ==========================================
+
+    def stop(self):
+
+        if self.timer.isActive():
             self.timer.stop()
+
+        self._streaming = False
+
+    # ==========================================
+    # Finish Immediately
+    # ==========================================
+
+    def finish(self):
+
+        self.stop()
+
+        if self.callback:
+            self.callback(self._text)
+
+        self.updated.emit(self._text)
+
+        self.finished.emit()
+
+    # ==========================================
+    # Clear
+    # ==========================================
+
+    def clear(self):
+
+        self.stop()
+
+        self._text = ""
+        self._index = 0
+
+    # ==========================================
+    # Speed
+    # ==========================================
+
+    def set_interval(self, interval: int):
+
+        self.interval = max(1, interval)
+
+        if self.timer.isActive():
+
+            self.timer.start(self.interval)
+
+    # ==========================================
+    # Getters
+    # ==========================================
+
+    @property
+    def text(self):
+        return self._text
+
+    @property
+    def streaming(self):
+        return self._streaming
+
+    @property
+    def progress(self):
+
+        if not self._text:
+            return 0
+
+        return int((self._index / len(self._text)) * 100)

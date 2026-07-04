@@ -1,15 +1,19 @@
-from auth.auth_service import AuthService
-
 from PySide6.QtWidgets import (
     QWidget,
     QLabel,
     QLineEdit,
     QPushButton,
     QVBoxLayout,
-    QMessageBox
+    QHBoxLayout,
+    QFrame,
+    QMessageBox,
+    QSizePolicy,
 )
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+
+from auth.auth_service import AuthService
 
 
 class RegisterWindow(QWidget):
@@ -18,120 +22,416 @@ class RegisterWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("NEXUS AI - Register")
-        self.resize(450, 600)
+        self.setFixedSize(1300, 750)
 
         self.setStyleSheet("""
-            QWidget{
-                background:#111827;
-                color:white;
-                font-family:Segoe UI;
-            }
 
-            QLabel{
-                font-size:22px;
-                font-weight:bold;
-            }
+        QWidget{
+            background:#0F172A;
+            color:white;
+            font-family:'Segoe UI';
+        }
 
-            QLineEdit{
-                padding:10px;
-                border:2px solid #2563EB;
-                border-radius:8px;
-                font-size:14px;
-            }
+        #card{
+            background:#1E293B;
+            border-radius:20px;
+            border:1px solid #334155;
+        }
 
-            QPushButton{
-                background:#2563EB;
-                color:white;
-                padding:10px;
-                border-radius:8px;
-                font-size:15px;
-                font-weight:bold;
-            }
+        QLabel{
+            background:transparent;
+        }
 
-            QPushButton:hover{
-                background:#1D4ED8;
-            }
+        QLineEdit{
+            background:#111827;
+            border:2px solid #334155;
+            border-radius:12px;
+            padding:14px;
+            font-size:15px;
+        }
+
+        QLineEdit:focus{
+            border:2px solid #3B82F6;
+        }
+
+        QPushButton{
+            background:#2563EB;
+            color:white;
+            border:none;
+            border-radius:12px;
+            padding:14px;
+            font-size:15px;
+            font-weight:bold;
+        }
+
+        QPushButton:hover{
+            background:#3B82F6;
+        }
+
         """)
 
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
+        root = QHBoxLayout(self)
+        root.setContentsMargins(70,50,70,50)
+        root.setSpacing(60)
+
+        # ===============================
+        # LEFT PANEL
+        # ===============================
+
+        left = QVBoxLayout()
+
+        left.setAlignment(Qt.AlignCenter)
+
+        logo = QLabel("🤖")
+        logo.setFont(QFont("Segoe UI Emoji",80))
+        logo.setAlignment(Qt.AlignCenter)
 
         title = QLabel("Create Account")
         title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("""
+            font-size:42px;
+            font-weight:800;
+            color:#60A5FA;
+        """)
 
-        self.full_name = QLineEdit()
-        self.full_name.setPlaceholderText("Full Name")
+        subtitle = QLabel(
+            "Join NEXUS AI Today"
+        )
+
+        subtitle.setAlignment(Qt.AlignCenter)
+
+        subtitle.setStyleSheet("""
+            font-size:18px;
+            color:#94A3B8;
+        """)
+
+        desc = QLabel(
+            "Start Building\n"
+            "Future With AI"
+        )
+
+      
+      
+        desc.setAlignment(Qt.AlignCenter)
+
+        desc.setStyleSheet("""
+            font-size:15px;
+            color:#CBD5E1;
+            line-height:24px;
+        """)
+
+        left.addStretch()
+        left.addWidget(logo)
+        left.addWidget(title)
+        left.addSpacing(10)
+        left.addWidget(subtitle)
+        left.addSpacing(25)
+        left.addWidget(desc)
+        left.addStretch()
+                # ===============================
+        # RIGHT PANEL
+        # ===============================
+
+        card = QFrame()
+        card.setObjectName("card")
+        card.setFixedWidth(470)
+
+        card_layout = QVBoxLayout(card)
+
+        card_layout.setContentsMargins(
+            40,
+            40,
+            40,
+            40
+        )
+
+        card_layout.setSpacing(18)
+
+        # ===============================
+        # TITLE
+        # ===============================
+
+        register_title = QLabel("Register")
+
+        register_title.setAlignment(Qt.AlignCenter)
+
+        register_title.setStyleSheet("""
+            font-size:28px;
+            font-weight:bold;
+        """)
+
+        register_subtitle = QLabel(
+            "Create your NEXUS AI account"
+        )
+
+        register_subtitle.setAlignment(Qt.AlignCenter)
+
+        register_subtitle.setStyleSheet("""
+            font-size:14px;
+            color:#94A3B8;
+        """)
+
+        # ===============================
+        # FULL NAME
+        # ===============================
+
+        name_label = QLabel("Full Name")
+
+        name_label.setStyleSheet("""
+            font-size:14px;
+            font-weight:bold;
+        """)
+
+        self.name = QLineEdit()
+
+        self.name.setPlaceholderText(
+            "Enter your full name"
+        )
+
+        # ===============================
+        # EMAIL
+        # ===============================
+
+        email_label = QLabel("Email")
+
+        email_label.setStyleSheet("""
+            font-size:14px;
+            font-weight:bold;
+        """)
 
         self.email = QLineEdit()
-        self.email.setPlaceholderText("Email Address")
+
+        self.email.setPlaceholderText(
+            "Enter your email"
+        )
+
+        # ===============================
+        # PASSWORD
+        # ===============================
+
+        password_label = QLabel("Password")
+
+        password_label.setStyleSheet("""
+            font-size:14px;
+            font-weight:bold;
+        """)
 
         self.password = QLineEdit()
-        self.password.setPlaceholderText("Password")
-        self.password.setEchoMode(QLineEdit.Password)
+
+        self.password.setPlaceholderText(
+            "Create password"
+        )
+
+        self.password.setEchoMode(
+            QLineEdit.Password
+        )
+
+        # ===============================
+        # CONFIRM PASSWORD
+        # ===============================
+
+        confirm_label = QLabel("Confirm Password")
+
+        confirm_label.setStyleSheet("""
+            font-size:14px;
+            font-weight:bold;
+        """)
 
         self.confirm_password = QLineEdit()
-        self.confirm_password.setPlaceholderText("Confirm Password")
-        self.confirm_password.setEchoMode(QLineEdit.Password)
 
-        self.register_btn = QPushButton("Register")
+        self.confirm_password.setPlaceholderText(
+            "Confirm password"
+        )
 
-        layout.addWidget(title)
-        layout.addSpacing(20)
-        layout.addWidget(self.full_name)
-        layout.addWidget(self.email)
-        layout.addWidget(self.password)
-        layout.addWidget(self.confirm_password)
-        layout.addSpacing(10)
-        layout.addWidget(self.register_btn)
+        self.confirm_password.setEchoMode(
+            QLineEdit.Password
+        )
 
-        self.setLayout(layout)
+        # ===============================
+        # BUTTONS
+        # ===============================
 
-        self.register_btn.clicked.connect(self.register)
+        self.register_btn = QPushButton(
+            "Create Account"
+        )
+
+        self.login_btn = QPushButton(
+            "Already have an account?"
+        )
+
+        self.login_btn.setStyleSheet("""
+
+        QPushButton{
+
+            background:#334155;
+
+            color:white;
+
+            border:none;
+
+            border-radius:12px;
+
+            padding:14px;
+
+            font-size:15px;
+
+            font-weight:bold;
+
+        }
+
+        QPushButton:hover{
+
+            background:#475569;
+
+        }
+
+        """)
+
+        # ===============================
+        # ADD WIDGETS
+        # ===============================
+
+        card_layout.addWidget(register_title)
+        card_layout.addWidget(register_subtitle)
+
+        card_layout.addSpacing(15)
+
+        card_layout.addWidget(name_label)
+        card_layout.addWidget(self.name)
+
+        card_layout.addWidget(email_label)
+        card_layout.addWidget(self.email)
+
+        card_layout.addWidget(password_label)
+        card_layout.addWidget(self.password)
+
+        card_layout.addWidget(confirm_label)
+        card_layout.addWidget(self.confirm_password)
+
+        card_layout.addSpacing(10)
+
+        card_layout.addWidget(self.register_btn)
+        card_layout.addWidget(self.login_btn)
+
+        root.addLayout(left, 1)
+        root.addWidget(card)
+                # ===============================
+        # EVENTS
+        # ===============================
+
+        self.register_btn.clicked.connect(
+            self.register
+        )
+
+        self.login_btn.clicked.connect(
+            self.open_login
+        )
+
+        self.confirm_password.returnPressed.connect(
+            self.register
+        )
+
+    # =====================================
+    # REGISTER
+    # =====================================
 
     def register(self):
 
-        full_name = self.full_name.text().strip()
+        username = self.name.text().strip()
         email = self.email.text().strip()
         password = self.password.text()
-        confirm_password = self.confirm_password.text()
+        confirm = self.confirm_password.text()
 
-        if not full_name or not email or not password or not confirm_password:
+        # -----------------------------
+        # Validation
+        # -----------------------------
+
+        if username == "":
             QMessageBox.warning(
                 self,
-                "Error",
-                "Please fill all fields."
+                "Validation",
+                "Please enter your full name."
             )
             return
 
-        if password != confirm_password:
+        if email == "":
             QMessageBox.warning(
                 self,
-                "Error",
+                "Validation",
+                "Please enter your email."
+            )
+            return
+
+        if "@" not in email or "." not in email:
+            QMessageBox.warning(
+                self,
+                "Validation",
+                "Invalid email address."
+            )
+            return
+
+        if password == "":
+            QMessageBox.warning(
+                self,
+                "Validation",
+                "Please enter password."
+            )
+            return
+
+        if len(password) < 6:
+            QMessageBox.warning(
+                self,
+                "Validation",
+                "Password must contain at least 6 characters."
+            )
+            return
+
+        if password != confirm:
+            QMessageBox.warning(
+                self,
+                "Validation",
                 "Passwords do not match."
             )
             return
 
+        # -----------------------------
+        # Register User
+        # -----------------------------
+
         success, message = AuthService.register_user(
-            full_name,
+            username,
             email,
             password
         )
 
         if success:
+
             QMessageBox.information(
                 self,
                 "Success",
                 message
             )
 
-            self.full_name.clear()
-            self.email.clear()
-            self.password.clear()
-            self.confirm_password.clear()
+            self.open_login()
 
         else:
+
             QMessageBox.warning(
                 self,
-                "Error",
+                "Registration Failed",
                 message
             )
+
+    # =====================================
+    # OPEN LOGIN
+    # =====================================
+
+    def open_login(self):
+
+        from ui.login.login_window import LoginWindow
+
+        self.login = LoginWindow()
+
+        self.login.show()
+
+        self.close()

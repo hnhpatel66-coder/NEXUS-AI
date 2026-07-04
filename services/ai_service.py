@@ -2,37 +2,73 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# Load .env file
+# ==========================================
+# LOAD ENVIRONMENT
+# ==========================================
+
 load_dotenv()
 
-# Read API Key
 API_KEY = os.getenv("GEMINI_API_KEY")
 
-print("API KEY:", API_KEY)
+if not API_KEY:
+    raise ValueError(
+        "❌ GEMINI_API_KEY not found in .env"
+    )
 
-# Configure Gemini
 genai.configure(api_key=API_KEY)
 
-# Load Model
-model = genai.GenerativeModel("gemini-2.5-flash")
+# ==========================================
+# GEMINI MODEL
+# ==========================================
 
+model = genai.GenerativeModel(
+    "gemini-2.5-flash"
+)
+
+
+# ==========================================
+# AI SERVICE
+# ==========================================
 
 class AIService:
 
     @staticmethod
-    def ask_ai(prompt):
+    def generate_response(prompt: str) -> str:
+        """
+        Main AI Response Method
+        """
+
         try:
-            response = model.generate_content(prompt)
-            return response.text
+
+            response = model.generate_content(
+                prompt
+            )
+
+            if hasattr(response, "text"):
+                return response.text
+
+            return "⚠ Empty response."
 
         except Exception as e:
 
             error = str(e)
 
             if "429" in error:
+
                 return (
                     "⏳ Gemini API Rate Limit Exceeded.\n\n"
-                    "Please wait 30 seconds and try again."
+                    "Please wait a moment and try again."
                 )
 
             return f"❌ {error}"
+
+    # ======================================
+    # BACKWARD COMPATIBILITY
+    # ======================================
+
+    @staticmethod
+    def ask_ai(prompt: str) -> str:
+        """
+        Old Method Support
+        """
+        return AIService.generate_response(prompt)
