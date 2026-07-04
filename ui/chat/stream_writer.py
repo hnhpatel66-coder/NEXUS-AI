@@ -4,7 +4,6 @@ from PySide6.QtCore import QObject, QTimer, Signal
 class StreamWriter(QObject):
     """
     ChatGPT Style Streaming Writer
-    Streams text character-by-character.
     """
 
     updated = Signal(str)
@@ -24,21 +23,30 @@ class StreamWriter(QObject):
         self.timer.timeout.connect(self._write_next)
 
     # ==========================================
-    # Start Streaming
+    # START
     # ==========================================
 
     def start(self, text: str):
 
         self.stop()
 
-        self._text = text or ""
+        self._text = str(text) if text else ""
+
         self._index = 0
+
         self._streaming = True
+
+        # Empty response
+        if len(self._text) == 0:
+
+            self.finished.emit()
+
+            return
 
         self.timer.start(self.interval)
 
     # ==========================================
-    # Internal Writer
+    # STREAM
     # ==========================================
 
     def _write_next(self):
@@ -55,24 +63,33 @@ class StreamWriter(QObject):
 
         current = self._text[:self._index]
 
-        if self.callback:
-            self.callback(current)
+        try:
 
-        self.updated.emit(current)
+            if self.callback:
+                self.callback(current)
+
+            self.updated.emit(current)
+
+        except Exception:
+
+            self.stop()
+
+            self.finished.emit()
 
     # ==========================================
-    # Stop Streaming
+    # STOP
     # ==========================================
 
     def stop(self):
 
         if self.timer.isActive():
+
             self.timer.stop()
 
         self._streaming = False
 
     # ==========================================
-    # Finish Immediately
+    # FINISH
     # ==========================================
 
     def finish(self):
@@ -80,6 +97,7 @@ class StreamWriter(QObject):
         self.stop()
 
         if self.callback:
+
             self.callback(self._text)
 
         self.updated.emit(self._text)
@@ -87,30 +105,33 @@ class StreamWriter(QObject):
         self.finished.emit()
 
     # ==========================================
-    # Clear
+    # RESET
     # ==========================================
 
-    def clear(self):
+    def reset(self):
 
         self.stop()
 
         self._text = ""
+
         self._index = 0
 
+    clear = reset
+
     # ==========================================
-    # Speed
+    # SPEED
     # ==========================================
 
-    def set_interval(self, interval: int):
+    def set_interval(self, interval):
 
-        self.interval = max(1, interval)
+        self.interval = max(1, int(interval))
 
         if self.timer.isActive():
 
             self.timer.start(self.interval)
 
     # ==========================================
-    # Getters
+    # PROPERTIES
     # ==========================================
 
     @property
