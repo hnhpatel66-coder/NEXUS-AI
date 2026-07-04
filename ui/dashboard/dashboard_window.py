@@ -1,10 +1,12 @@
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
-    QVBoxLayout,
     QHBoxLayout,
+    QVBoxLayout,
     QStackedWidget,
 )
+
+from PySide6.QtCore import Qt
 
 from ui.dashboard.sidebar import Sidebar
 from ui.dashboard.topbar import TopBar
@@ -26,109 +28,257 @@ class DashboardWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("NEXUS AI")
-        self.resize(1400, 850)
+
+        self.resize(1450, 900)
+
+        self.setMinimumSize(1200, 750)
 
         self.setStyleSheet("""
-            QMainWindow{
-                background:#111827;
-            }
+
+        QMainWindow{
+
+            background:#111827;
+
+        }
+
         """)
 
-        # ===========================
-        # Central Widget
-        # ===========================
+        # =====================================
+        # CENTRAL WIDGET
+        # =====================================
 
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+        self.central = QWidget()
 
-        main_layout = QHBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        self.setCentralWidget(self.central)
 
-        # ===========================
-        # Sidebar
-        # ===========================
+        # =====================================
+        # MAIN LAYOUT
+        # =====================================
+
+        self.main_layout = QHBoxLayout(self.central)
+
+        self.main_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        self.main_layout.setSpacing(0)
+
+        # =====================================
+        # SIDEBAR
+        # =====================================
 
         self.sidebar = Sidebar()
 
-        # ===========================
-        # Right Layout
-        # ===========================
+        self.main_layout.addWidget(
+            self.sidebar
+        )
 
-        right_layout = QVBoxLayout()
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(0)
+        # =====================================
+        # RIGHT SIDE
+        # =====================================
+
+        self.right_widget = QWidget()
+
+        self.right_layout = QVBoxLayout(
+            self.right_widget
+        )
+
+        self.right_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0
+        )
+
+        self.right_layout.setSpacing(0)
+
+        # =====================================
+        # TOPBAR
+        # =====================================
 
         self.topbar = TopBar()
 
-        # ===========================
-        # Pages
-        # ===========================
+        self.right_layout.addWidget(
+            self.topbar
+        )
 
-        self.home = HomePage()
-        self.chat = ChatPage()
-        self.projects = ProjectsPage()
-        self.explorer = ExplorerPage()
-        self.editor = EditorPage()
-        self.agent = AgentPage()
-        self.memory = MemoryPage()
-        self.settings = SettingsPage()
-
-        # ===========================
-        # Stacked Widget
-        # ===========================
+        # =====================================
+        # STACK
+        # =====================================
 
         self.stack = QStackedWidget()
 
-        self.stack.addWidget(self.home)        # 0
-        self.stack.addWidget(self.chat)        # 1
-        self.stack.addWidget(self.projects)    # 2
-        self.stack.addWidget(self.explorer)    # 3
-        self.stack.addWidget(self.editor)      # 4
-        self.stack.addWidget(self.agent)       # 5
-        self.stack.addWidget(self.memory)      # 6
-        self.stack.addWidget(self.settings)    # 7
+        self.stack.setStyleSheet("""
 
-        # ===========================
-        # Status Bar
-        # ===========================
+        QStackedWidget{
+
+            background:#0F172A;
+
+        }
+
+        """)
+
+        self.right_layout.addWidget(
+            self.stack
+        )
+
+        # =====================================
+        # STATUS BAR
+        # =====================================
 
         self.status = StatusBar()
 
-        right_layout.addWidget(self.topbar)
-        right_layout.addWidget(self.stack)
-        right_layout.addWidget(self.status)
+        self.right_layout.addWidget(
+            self.status
+        )
 
-        main_layout.addWidget(self.sidebar)
-        main_layout.addLayout(right_layout)
+        self.main_layout.addWidget(
+            self.right_widget
+        )
+                # =====================================
+        # CREATE PAGES
+        # =====================================
 
-        central_widget.setLayout(main_layout)
+        self.home_page = HomePage()
+        self.chat_page = ChatPage()
+        self.projects_page = ProjectsPage()
+        self.explorer_page = ExplorerPage()
+        self.editor_page = EditorPage()
+        self.agent_page = AgentPage()
+        self.memory_page = MemoryPage()
+        self.settings_page = SettingsPage()
 
-        # Sidebar Signal
-        self.sidebar.menu_clicked.connect(self.menu_action)
+        # =====================================
+        # ADD PAGES TO STACK
+        # =====================================
 
-    def menu_action(self, menu):
+        self.stack.addWidget(self.home_page)       # Index 0
+        self.stack.addWidget(self.chat_page)       # Index 1
+        self.stack.addWidget(self.projects_page)   # Index 2
+        self.stack.addWidget(self.explorer_page)   # Index 3
+        self.stack.addWidget(self.editor_page)     # Index 4
+        self.stack.addWidget(self.agent_page)      # Index 5
+        self.stack.addWidget(self.memory_page)     # Index 6
+        self.stack.addWidget(self.settings_page)   # Index 7
 
-        if menu == "chat":
-            self.stack.setCurrentIndex(1)
+        # Default Page
+        self.stack.setCurrentIndex(0)
 
-        elif menu == "projects":
-            self.stack.setCurrentIndex(2)
+        # =====================================
+        # CONNECT SIDEBAR
+        # =====================================
 
-        elif menu == "explorer":
-            self.stack.setCurrentIndex(3)
+        self.sidebar.menu_clicked.connect(
+            self.change_page
+        )
 
-        elif menu == "editor":
-            self.stack.setCurrentIndex(4)
+        # =====================================
+        # WINDOW READY
+        # =====================================
 
-        elif menu == "agent":
-            self.stack.setCurrentIndex(5)
+        self.status.showMessage(
+            "Dashboard Loaded Successfully"
+        )
+            # =====================================
+    # CHANGE PAGE
+    # =====================================
 
-        elif menu == "memory":
-            self.stack.setCurrentIndex(6)
+    def change_page(self, menu):
 
-        elif menu == "settings":
-            self.stack.setCurrentIndex(7)
+        page_map = {
+            "home": 0,
+            "chat": 1,
+            "projects": 2,
+            "explorer": 3,
+            "editor": 4,
+            "agent": 5,
+            "memory": 6,
+            "settings": 7,
+        }
 
-        elif menu == "logout":
-            self.close()
+        if menu in page_map:
+
+            self.stack.setCurrentIndex(
+                page_map[menu]
+            )
+
+            self.status.showMessage(
+                f"{menu.title()} Opened"
+            )
+
+            return
+
+        # =================================
+        # LOGOUT
+        # =================================
+
+        if menu == "logout":
+
+            from PySide6.QtWidgets import QMessageBox
+
+            reply = QMessageBox.question(
+
+                self,
+
+                "Logout",
+
+                "Are you sure you want to logout?",
+
+                QMessageBox.Yes | QMessageBox.No
+
+            )
+
+            if reply == QMessageBox.Yes:
+
+                from ui.login.login_window import LoginWindow
+
+                self.login_window = LoginWindow()
+
+                self.login_window.show()
+
+                self.close()
+
+    # =====================================
+    # SHOW MESSAGE IN STATUSBAR
+    # =====================================
+
+    def set_status(self, text):
+
+        self.status.showMessage(text)
+
+    # =====================================
+    # OPEN CHAT
+    # =====================================
+
+    def open_chat(self):
+
+        self.stack.setCurrentIndex(1)
+
+        self.status.showMessage(
+            "AI Chat Ready"
+        )
+
+    # =====================================
+    # OPEN HOME
+    # =====================================
+
+    def open_home(self):
+
+        self.stack.setCurrentIndex(0)
+
+        self.status.showMessage(
+            "Welcome Home"
+        )
+
+    # =====================================
+    # WINDOW CLOSE EVENT
+    # =====================================
+
+    def closeEvent(self, event):
+
+        print("Dashboard Closed")
+
+        event.accept()

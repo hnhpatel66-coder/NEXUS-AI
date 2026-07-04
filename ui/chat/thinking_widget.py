@@ -1,42 +1,89 @@
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtWidgets import (
+    QWidget,
+    QLabel,
+    QHBoxLayout,
+)
+
+from PySide6.QtCore import (
+    Qt,
+    QTimer,
+)
 
 
 class ThinkingWidget(QWidget):
+    """
+    ChatGPT Style Thinking Animation
+    """
 
     def __init__(self):
         super().__init__()
 
         self.dots = 0
 
-        self.label = QLabel("NEXUS AI is thinking")
-        self.label.setAlignment(Qt.AlignCenter)
+        self.setStyleSheet("""
+            QWidget{
+                background:transparent;
+            }
 
-        self.label.setStyleSheet("""
-            font-size:14px;
-            color:#94A3B8;
-            font-weight:bold;
+            QLabel{
+                color:#94A3B8;
+                font-size:14px;
+                font-family:'Segoe UI';
+                padding:10px;
+            }
         """)
 
-        layout = QVBoxLayout()
+        layout = QHBoxLayout(self)
+
+        layout.setContentsMargins(
+            15,
+            10,
+            15,
+            10
+        )
+
+        layout.setAlignment(Qt.AlignLeft)
+
+        self.label = QLabel()
+
         layout.addWidget(self.label)
-        self.setLayout(layout)
 
-        # Timer for animation
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.animate)
+        self.timer = QTimer(self)
 
-    # start animation
+        self.timer.timeout.connect(
+            self.animate
+        )
+
+        self.stop()
+
+    # =====================================
+    # START
+    # =====================================
+
     def start(self):
+
         self.dots = 0
+
+        self.show()
+
         self.timer.start(400)
 
-    # stop animation
+    # =====================================
+    # STOP
+    # =====================================
+
     def stop(self):
+
         self.timer.stop()
+
         self.label.setText("")
 
-    # animation logic
+        self.hide()
+
+    # =====================================
+    # ANIMATION
+    # =====================================
+
     def animate(self):
 
         self.dots += 1
@@ -45,5 +92,21 @@ class ThinkingWidget(QWidget):
             self.dots = 0
 
         self.label.setText(
-            "NEXUS AI is thinking" + "." * self.dots
+            "🤖 NEXUS AI is thinking" + "." * self.dots
         )
+
+    # =====================================
+    # CHANGE TEXT
+    # =====================================
+
+    def set_text(self, text: str):
+
+        self.label.setText(text)
+
+    # =====================================
+    # IS RUNNING
+    # =====================================
+
+    def is_running(self):
+
+        return self.timer.isActive()
