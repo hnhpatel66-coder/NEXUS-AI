@@ -3,13 +3,21 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QMessageBox,
+    QStackedWidget,
 )
 
 from ui.dashboard.sidebar import Sidebar
 from ui.dashboard.topbar import TopBar
-from ui.dashboard.home_page import HomePage
 from ui.dashboard.statusbar import StatusBar
+
+from ui.dashboard.home_page import HomePage
+from ui.dashboard.chat_page import ChatPage
+from ui.dashboard.projects_page import ProjectsPage
+from ui.dashboard.explorer_page import ExplorerPage
+from ui.dashboard.editor_page import EditorPage
+from ui.dashboard.agent_page import AgentPage
+from ui.dashboard.memory_page import MemoryPage
+from ui.dashboard.settings_page import SettingsPage
 
 
 class DashboardWindow(QMainWindow):
@@ -26,34 +34,69 @@ class DashboardWindow(QMainWindow):
             }
         """)
 
-        # Main Widget
+        # ===========================
+        # Central Widget
+        # ===========================
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # Main Horizontal Layout
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
+        # ===========================
         # Sidebar
+        # ===========================
+
         self.sidebar = Sidebar()
 
-        # Right Side Layout
+        # ===========================
+        # Right Layout
+        # ===========================
+
         right_layout = QVBoxLayout()
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(0)
 
-        # Top Bar
         self.topbar = TopBar()
 
-        # Home Page
-        self.home = HomePage()
+        # ===========================
+        # Pages
+        # ===========================
 
+        self.home = HomePage()
+        self.chat = ChatPage()
+        self.projects = ProjectsPage()
+        self.explorer = ExplorerPage()
+        self.editor = EditorPage()
+        self.agent = AgentPage()
+        self.memory = MemoryPage()
+        self.settings = SettingsPage()
+
+        # ===========================
+        # Stacked Widget
+        # ===========================
+
+        self.stack = QStackedWidget()
+
+        self.stack.addWidget(self.home)        # 0
+        self.stack.addWidget(self.chat)        # 1
+        self.stack.addWidget(self.projects)    # 2
+        self.stack.addWidget(self.explorer)    # 3
+        self.stack.addWidget(self.editor)      # 4
+        self.stack.addWidget(self.agent)       # 5
+        self.stack.addWidget(self.memory)      # 6
+        self.stack.addWidget(self.settings)    # 7
+
+        # ===========================
         # Status Bar
+        # ===========================
+
         self.status = StatusBar()
 
         right_layout.addWidget(self.topbar)
-        right_layout.addWidget(self.home)
+        right_layout.addWidget(self.stack)
         right_layout.addWidget(self.status)
 
         main_layout.addWidget(self.sidebar)
@@ -61,59 +104,31 @@ class DashboardWindow(QMainWindow):
 
         central_widget.setLayout(main_layout)
 
-        # Sidebar Events
+        # Sidebar Signal
         self.sidebar.menu_clicked.connect(self.menu_action)
 
     def menu_action(self, menu):
 
         if menu == "chat":
-            QMessageBox.information(
-                self,
-                "AI Chat",
-                "AI Chat module will be available in Phase 5."
-            )
+            self.stack.setCurrentIndex(1)
 
         elif menu == "projects":
-            QMessageBox.information(
-                self,
-                "Projects",
-                "Project Manager is coming soon."
-            )
+            self.stack.setCurrentIndex(2)
 
         elif menu == "explorer":
-            QMessageBox.information(
-                self,
-                "Explorer",
-                "File Explorer is under development."
-            )
+            self.stack.setCurrentIndex(3)
 
         elif menu == "editor":
-            QMessageBox.information(
-                self,
-                "Code Editor",
-                "Professional Code Editor coming soon."
-            )
+            self.stack.setCurrentIndex(4)
 
         elif menu == "agent":
-            QMessageBox.information(
-                self,
-                "AI Agent",
-                "AI Agent will be added in future phase."
-            )
+            self.stack.setCurrentIndex(5)
 
         elif menu == "memory":
-            QMessageBox.information(
-                self,
-                "Memory",
-                "Memory Manager is under development."
-            )
+            self.stack.setCurrentIndex(6)
 
         elif menu == "settings":
-            QMessageBox.information(
-                self,
-                "Settings",
-                "Settings Panel coming soon."
-            )
+            self.stack.setCurrentIndex(7)
 
         elif menu == "logout":
             self.close()

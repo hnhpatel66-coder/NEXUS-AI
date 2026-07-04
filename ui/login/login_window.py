@@ -4,14 +4,18 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QVBoxLayout,
+    QHBoxLayout,
+    QFrame,
     QCheckBox,
     QMessageBox
 )
+
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 
 from auth.auth_service import AuthService
-from ui.login.register_window import RegisterWindow
 from ui.dashboard.dashboard_window import DashboardWindow
+from ui.login.register_window import RegisterWindow
 
 
 class LoginWindow(QWidget):
@@ -19,113 +23,431 @@ class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        print("LOGIN WINDOW LOADED")
-        self.setWindowTitle("NEXUS AI - Login")
-        self.resize(450, 520)
+        # ==========================================
+        # WINDOW
+        # ==========================================
+
+        self.setWindowTitle("🤖 NEXUS AI")
+
+        self.resize(1350, 760)
+
+        self.setMinimumSize(1200,700)
+
+        # ==========================================
+        # THEME
+        # ==========================================
 
         self.setStyleSheet("""
-            QWidget{
-                background:#111827;
-                color:white;
-                font-family:Segoe UI;
-            }
 
-            QLabel{
-                font-size:22px;
-                font-weight:bold;
-            }
+        QWidget{
 
-            QLineEdit{
-                padding:10px;
-                border:2px solid #2563EB;
-                border-radius:8px;
-                font-size:14px;
-            }
+            background:#0F172A;
 
-            QPushButton{
-                background:#2563EB;
-                color:white;
-                padding:10px;
-                border-radius:8px;
-                font-size:15px;
-                font-weight:bold;
-            }
+            color:white;
 
-            QPushButton:hover{
-                background:#1D4ED8;
-            }
+            font-family:'Segoe UI';
+
+        }
+
+        #loginCard{
+
+            background:#1E293B;
+
+            border:1px solid #334155;
+
+            border-radius:24px;
+
+        }
+
+        QLabel{
+
+            background:transparent;
+
+            color:white;
+
+        }
+
+        QLineEdit{
+
+            background:#111827;
+
+            border:2px solid #334155;
+
+            border-radius:14px;
+
+            padding:14px;
+
+            font-size:15px;
+
+        }
+
+        QLineEdit:focus{
+
+            border:2px solid #3B82F6;
+
+        }
+
+        QPushButton{
+
+            background:#2563EB;
+
+            border:none;
+
+            border-radius:14px;
+
+            padding:14px;
+
+            font-size:15px;
+
+            font-weight:bold;
+
+            color:white;
+
+        }
+
+        QPushButton:hover{
+
+            background:#3B82F6;
+
+        }
+
+        QCheckBox{
+
+            font-size:14px;
+
+        }
+
         """)
 
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
+        # ==========================================
+        # ROOT LAYOUT
+        # ==========================================
 
-        title = QLabel("NEXUS AI Login")
+        self.root = QHBoxLayout(self)
+
+        self.root.setContentsMargins(
+            60,
+            40,
+            60,
+            40
+        )
+
+        self.root.setSpacing(80)
+
+        # ==========================================
+        # LEFT PANEL
+        # ==========================================
+
+        self.left = QVBoxLayout()
+
+        self.left.setAlignment(Qt.AlignCenter)
+                # ==========================================
+        # LOGO
+        # ==========================================
+
+        logo = QLabel("🤖")
+        logo.setAlignment(Qt.AlignCenter)
+        logo.setFont(QFont("Segoe UI Emoji", 90))
+
+        # ==========================================
+        # TITLE
+        # ==========================================
+
+        title = QLabel("NEXUS AI")
+
         title.setAlignment(Qt.AlignCenter)
 
-        self.email = QLineEdit()
-        self.email.setPlaceholderText("Email")
+        title.setStyleSheet("""
 
-        self.password = QLineEdit()
-        self.password.setPlaceholderText("Password")
-        self.password.setEchoMode(QLineEdit.Password)
+            font-size:56px;
 
-        remember = QCheckBox("Remember Me")
+            font-weight:800;
 
-        self.login_btn = QPushButton("Login")
-        self.register_btn = QPushButton("Create New Account")
+            color:#60A5FA;
 
-        layout.addWidget(title)
-        layout.addSpacing(20)
-        layout.addWidget(self.email)
-        layout.addWidget(self.password)
-        layout.addWidget(remember)
-        layout.addSpacing(10)
-        layout.addWidget(self.login_btn)
-        layout.addWidget(self.register_btn)
+        """)
 
-        self.setLayout(layout)
+        # ==========================================
+        # SUBTITLE
+        # ==========================================
+
+        subtitle = QLabel(
+            "Your Personal AI Assistant"
+        )
+
+        subtitle.setAlignment(Qt.AlignCenter)
+
+        subtitle.setStyleSheet("""
+
+            font-size:20px;
+
+            color:#94A3B8;
+
+        """)
+
+        # ==========================================
+        # DESCRIPTION
+        # ==========================================
+
+        description = QLabel(
+
+            "Experience the next generation of\n"
+            "Artificial Intelligence.\n\n"
+            "💬 Chat Naturally\n"
+            "💻 Generate Code\n"
+            "📄 Summarize Documents\n"
+            "🧠 Learn Faster\n"
+            "🚀 Build Projects"
+
+        )
+
+        description.setAlignment(Qt.AlignCenter)
+
+        description.setStyleSheet("""
+
+            font-size:15px;
+
+            color:#CBD5E1;
+
+            line-height:24px;
+
+        """)
+
+        # ==========================================
+        # VERSION
+        # ==========================================
+
+        version = QLabel("Version 1.0")
+
+        version.setAlignment(Qt.AlignCenter)
+
+        version.setStyleSheet("""
+
+            color:#64748B;
+
+            font-size:13px;
+
+        """)
+
+        # ==========================================
+        # ADD LEFT PANEL
+        # ==========================================
+
+        self.left.addStretch()
+
+        self.left.addWidget(logo)
+
+        self.left.addSpacing(15)
+
+        self.left.addWidget(title)
+
+        self.left.addSpacing(8)
+
+        self.left.addWidget(subtitle)
+
+        self.left.addSpacing(25)
+
+        self.left.addWidget(description)
+
+        self.left.addStretch()
+
+        self.left.addWidget(version)
+                # ==========================================
+        # LOGO
+        # ==========================================
+
+        logo = QLabel("🤖")
+        logo.setAlignment(Qt.AlignCenter)
+        logo.setFont(QFont("Segoe UI Emoji", 90))
+
+        # ==========================================
+        # TITLE
+        # ==========================================
+
+        title = QLabel("NEXUS AI")
+
+        title.setAlignment(Qt.AlignCenter)
+
+        title.setStyleSheet("""
+
+            font-size:56px;
+
+            font-weight:800;
+
+            color:#60A5FA;
+
+        """)
+
+        # ==========================================
+        # SUBTITLE
+        # ==========================================
+
+        subtitle = QLabel(
+            "Your Personal AI Assistant"
+        )
+
+        subtitle.setAlignment(Qt.AlignCenter)
+
+        subtitle.setStyleSheet("""
+
+            font-size:20px;
+
+            color:#94A3B8;
+
+        """)
+
+        # ==========================================
+        # DESCRIPTION
+        # ==========================================
+
+        description = QLabel(
+
+            "Experience the next generation of\n"
+            "Artificial Intelligence.\n\n"
+            "💬 Chat Naturally\n"
+            "💻 Generate Code\n"
+            "📄 Summarize Documents\n"
+            "🧠 Learn Faster\n"
+            "🚀 Build Projects"
+
+        )
+
+        description.setAlignment(Qt.AlignCenter)
+
+        description.setStyleSheet("""
+
+            font-size:15px;
+
+            color:#CBD5E1;
+
+            line-height:24px;
+
+        """)
+
+        # ==========================================
+        # VERSION
+        # ==========================================
+
+        version = QLabel("Version 1.0")
+
+        version.setAlignment(Qt.AlignCenter)
+
+        version.setStyleSheet("""
+
+            color:#64748B;
+
+            font-size:13px;
+
+        """)
+
+        # ==========================================
+        # ADD LEFT PANEL
+        # ==========================================
+
+        self.left.addStretch()
+
+        self.left.addWidget(logo)
+
+        self.left.addSpacing(15)
+
+        self.left.addWidget(title)
+
+        self.left.addSpacing(8)
+
+        self.left.addWidget(subtitle)
+
+        self.left.addSpacing(25)
+
+        self.left.addWidget(description)
+
+        self.left.addStretch()
+
+        self.left.addWidget(version)
+                # ==========================================
+        # EVENTS
+        # ==========================================
 
         self.login_btn.clicked.connect(self.login)
         self.register_btn.clicked.connect(self.open_register)
 
+        self.email.returnPressed.connect(self.login)
+        self.password.returnPressed.connect(self.login)
+
+    # ==========================================
+    # LOGIN
+    # ==========================================
+
     def login(self):
 
-        QMessageBox.information(self, "Test", "Login Button Clicked")
-        
-        print("LOGIN BUTTON CLICKED")
         email = self.email.text().strip()
         password = self.password.text()
 
-        if not email or not password:
+        if email == "":
             QMessageBox.warning(
                 self,
-                "Error",
-                "Please enter Email and Password."
+                "Email Required",
+                "Please enter your email."
             )
             return
 
-        success = AuthService.login_user(email, password)
-
-        if success:
-            QMessageBox.information(
-                self,
-                "Success",
-                "Login Successful."
-            )
-
-            self.dashboard = DashboardWindow()
-            self.dashboard.show()
-
-            self.close()
-
-        else:
+        if password == "":
             QMessageBox.warning(
                 self,
-                "Error",
+                "Password Required",
+                "Please enter your password."
+            )
+            return
+
+        success = AuthService.login_user(
+            email,
+            password
+        )
+
+        if success:
+
+            QMessageBox.information(
+                 self,
+                "Success",
+                "Login Successful!"
+            )
+
+    try:
+
+        print("Creating Dashboard...")
+        self.dashboard = DashboardWindow()
+
+        print("Showing Dashboard...")
+        self.dashboard.show()
+
+        print("Closing Login...")
+        self.close()
+
+    except Exception as e:
+
+        print("Dashboard Error:", e)
+
+        QMessageBox.critical(
+            self,
+            "Dashboard Error",
+            str(e)
+        )
+
+    else:
+
+            QMessageBox.warning(
+                self,
+                "Login Failed",
                 "Invalid Email or Password."
             )
+
+    # ==========================================
+    # OPEN REGISTER
+    # ==========================================
 
     def open_register(self):
 
         self.register = RegisterWindow()
+
         self.register.show()
+
+        self.close()
