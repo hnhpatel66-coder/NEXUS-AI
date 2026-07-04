@@ -1,19 +1,23 @@
 import sqlite3
 
 from auth.password_manager import PasswordManager
-from database.database import DB_PATH
+from database.database import get_connection
 
 
 class AuthService:
 
+    # ==========================================
+    # REGISTER USER
+    # ==========================================
     @staticmethod
-    def register_user(full_name, email, password):
+    def register_user(username, email, password):
 
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_connection()
         cursor = conn.cursor()
 
+        # Email Exists?
         cursor.execute(
-            "SELECT id FROM users WHERE email=?",
+            "SELECT id FROM users WHERE email = ?",
             (email,)
         )
 
@@ -21,15 +25,18 @@ class AuthService:
             conn.close()
             return False, "Email already exists."
 
+        # Hash Password
         hashed_password = PasswordManager.hash_password(password)
 
+        # Insert User
         cursor.execute(
             """
-            INSERT INTO users(full_name, email, password)
+            INSERT INTO users
+            (username, email, password)
             VALUES (?, ?, ?)
             """,
             (
-                full_name,
+                username,
                 email,
                 hashed_password
             )
@@ -40,40 +47,59 @@ class AuthService:
 
         return True, "Registration Successful."
 
+    # ==========================================
+    # LOGIN USER
+    # ==========================================
     @staticmethod
     def login_user(email, password):
 
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute(
             """
-            SELECT email, password
+            SELECT password
             FROM users
-            WHERE email=?
+            WHERE email = ?
             """,
             (email,)
         )
 
         user = cursor.fetchone()
 
-        print("Entered Email :", email)
-        print("Database User :", user)
-
         conn.close()
 
         if user is None:
-            print("❌ Email Not Found")
             return False
 
-        print("Entered Password :", password)
-        print("Stored Hash :", user[1])
-
-        result = PasswordManager.verify_password(
+        return PasswordManager.verify_password(
             password,
-            user[1]
+            user[0]
         )
 
-        print("Password Match :", result)
+    # ==========================================
+    # GET USERNAME
+    # ==========================================
+    @staticmethod
+    def get_username(email):
 
-        return result
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT username
+            FROM users
+            WHERE email = ?
+            """,
+            (email,)
+        )
+
+        user = cursor.fetchone()
+
+        conn.close()
+
+        if user:
+            return user[0]
+
+        return None
